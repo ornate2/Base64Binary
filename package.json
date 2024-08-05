@@ -1,0 +1,41 @@
+{
+  "name": "Base64Binary",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@sap/cds": "^7",
+    "@sap/cds-hana": "^2",
+    "@sap/hana-client": "^2.21.28",
+    "@sap/xssec": "^3.6.1",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^7",
+    "@sap/eslint-plugin-cds": "^3",
+    "@sap/hdi-deploy": "4.9.5",
+    "@sap/ux-specification": "^1.120.15",
+    "eslint": "^9",
+    "rimraf": "^5.0.5"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch-binary": "cds watch --open binary/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy Base64Binary --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+  },
+  "cds": {
+    "requires": {
+      "auth": "mocked",
+      "db": "hana"
+    },
+    "hana": {
+      "deploy-format": "hdbtable"
+    }
+  }
+}

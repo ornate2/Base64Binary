@@ -1,0 +1,1 @@
+using BinaryImage as service from '../../srv/service';

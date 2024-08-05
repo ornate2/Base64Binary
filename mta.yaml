@@ -1,0 +1,96 @@
+_schema-version: "3.1"
+ID: Base64Binary
+description: A simple CAP project.
+version: 1.0.0
+modules:
+- name: Base64Binary-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: Base64Binary-auth
+  - name: Base64Binary-db
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+    readiness-health-check-http-endpoint: /health
+    readiness-health-check-type: http
+  build-parameters:
+    builder: npm
+- name: Base64Binary-db-deployer
+  type: hdb
+  path: gen/db
+  requires:
+  - name: Base64Binary-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: Base64Binary-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: Base64Binary-destination-service
+    parameters:
+      content-target: true
+  - name: Base64Binary_html_repo_host
+    parameters:
+      service-key:
+        name: Base64Binary_html_repo_host-key
+  - name: Base64Binary-auth
+    parameters:
+      service-key:
+        name: Base64Binary-auth-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: Base64Binary_Base64Binary_html_repo_host
+          ServiceInstanceName: Base64Binary-html5-app-host-service
+          ServiceKeyName: Base64Binary_html_repo_host-key
+          sap.cloud.service: Base64Binary
+        - Authentication: OAuth2UserTokenExchange
+          Name: Base64Binary_Base64Binary_auth
+          ServiceInstanceName: Base64Binary-auth
+          ServiceKeyName: Base64Binary-auth-key
+          sap.cloud.service: Base64Binary
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+resources:
+- name: Base64Binary-auth
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      tenant-mode: dedicated
+      xsappname: Base64Binary-${org}-${space}
+    path: ./xs-security.json
+    service: xsuaa
+    service-plan: application
+- name: Base64Binary-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+- name: Base64Binary-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      version: 1.0.0
+    service: destination
+    service-name: Base64Binary-destination-service
+    service-plan: lite
+- name: Base64Binary_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: Base64Binary-html5-app-host-service
+    service-plan: app-host
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm ci
+    - npx cds build --production
